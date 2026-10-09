@@ -12,7 +12,7 @@
 
 | Fase | O que construir | RF cobertos | Critério de pronto | Status |
 |---|---|---|---|---|
-| 0. Setup | VPS Ubuntu LTS, Docker, subdomínios, Nginx+TLS (Certbot), UFW (só 443/80), `.env`/`.env.example`, repositório privado `arkhen-iris`, CI | — | Stack sobe; Nginx serve HTTPS; `/health` do n8n responde; CI verde | [ ] |
+| 0. Setup | VPS Ubuntu LTS, Docker, subdomínios, Nginx+TLS (Certbot), UFW (só 443/80), `.env`/`.env.example`, repositório privado `arkhen-iris`, CI | — | Stack sobe; Nginx serve HTTPS; `/health` responde; CI verde | 🟡 artefatos prontos (`infra/`, CI); falta executar no VPS |
 | 1. Banco | Bancos `iris` e `n8n`; DDL (tabelas §4), views (§5), índices; **RLS forçado**; usuários `iris_owner`/`iris_app`/`iris_ro`; seeds fictícios; 1º tenant | — | Migração roda como `iris_owner`; **testes de isolamento multi-tenant verdes** | [ ] |
 | 2. Captura + roteamento | IMAP, guarda anti-loop, dedup, tabela de roteamento, encaminhamento SMTP, registro + eventos | RF-001,003,004,005,009(parcial) | E-mail de teste chega ao destino certo e gera protocolo + eventos; auto-resposta é descartada | [ ] |
 | 3. IA | Classificação, validação da saída (JSON Schema), fila de triagem humana | RF-002,009 | Classifica; cai em triagem quando confiança < 0,6 ou saída inválida | [ ] |
