@@ -1,0 +1,29 @@
+# Segredos — NUNCA versionar (regra de segurança ARKHEN)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+certs/
+secrets/
+
+# Dados e volumes
+/data/
+*.sqlite
+*.db
+dump*.sql
+backups/
+
+# Dependências / build
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
