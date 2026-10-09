@@ -1,5 +1,7 @@
 # CLAUDE.md — ÍRIS (ARKHEN Tecnologia)
 
+> ⚠️ **Repositório substituído em 09/10/2026.** A ÍRIS foi redesenhada após a conversa com o cliente e passou a ser o **módulo de e-mail do AMORA**. A documentação vigente (versão 2.0) e o código ficam em **`ArkhenTecnologia/arkhen-crm-template`**, pasta `docs/modulos/iris/`. Este repositório é mantido só como histórico da versão 1.0 — não abra trabalho novo aqui.
+
 > Regras ARKHEN (resumo do Manual ARK-MAN-001 v1.4) + regras do projeto ÍRIS. Leia antes de qualquer tarefa no repositório `arkhen-iris`. A versão completa e sempre vigente do manual vive no Projeto Arkhen_ÍRIS; aqui fica o essencial para codar.
 
 ## Fonte da verdade

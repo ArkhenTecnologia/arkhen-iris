@@ -1,5 +1,7 @@
 # ÍRIS — uma solução ARKHEN
 
+> ⚠️ **Repositório substituído em 09/10/2026.** A ÍRIS foi redesenhada após a conversa com o cliente e passou a ser o **módulo de e-mail do AMORA**. A documentação vigente (versão 2.0) e o código ficam em **`ArkhenTecnologia/arkhen-crm-template`**, pasta `docs/modulos/iris/`. Este repositório é mantido só como histórico da versão 1.0 — não abra trabalho novo aqui.
+
 > **Secretária de triagem de e-mail com IA.** Recebe os e-mails de uma caixa geral, classifica (departamento, prioridade, tipo de solicitante), define o SLA, registra com protocolo e **encaminha ao responsável certo**. **Não responde ao solicitante** — organiza e entrega a quem deve agir.
 
 **Linha:** ARKHEN AUTOMAÇÃO + DADOS · **Modelo:** produto multi-tenant (SaaS) · **Status:** documentação (pré-código).
