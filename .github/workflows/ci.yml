@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  validar:
+    name: Validação (infra e segredos)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Nenhum segredo versionado
+        run: |
+          # Falha se um .env real (não o .env.example) estiver no repositório
+          if git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.env\.example'; then
+            echo "ERRO: arquivo .env versionado — segredos não vão para o Git."
+            exit 1
+          fi
+          echo "OK: nenhum .env versionado."
+
+      - name: Validar YAML dos workflows n8n e configs
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          try:
+              import yaml
+          except ImportError:
+              import subprocess; subprocess.check_call([sys.executable,"-m","pip","install","-q","pyyaml"]); import yaml
+          erros = 0
+          for f in glob.glob("**/*.yml", recursive=True) + glob.glob("**/*.yaml", recursive=True):
+              try:
+                  list(yaml.safe_load_all(open(f, encoding="utf-8")))
+                  print("ok:", f)
+              except Exception as e:
+                  print("ERRO em", f, "->", e); erros += 1
+          sys.exit(1 if erros else 0)
+          PY
+
+      - name: Validar docker-compose
+        run: |
+          # .env mínimo só para o compose resolver as variáveis na validação
+          cp .env.example .env
+          docker compose -f infra/docker-compose.yml --env-file .env config >/dev/null
+          echo "OK: docker-compose válido."
+          rm -f .env
