@@ -1,0 +1,122 @@
+# ÍRIS — stack da Fase 0 (Setup)
+# Regra ARKHEN: segredos vêm do .env (fora do Git); nada publicado além do 443/80 (via Nginx).
+# Antes de produção: FIXAR as tags de imagem em versões exatas (n8n, metabase) — ver [A CONFIRMAR].
+# Suba com:  docker compose --env-file ../.env up -d   (o .env fica na raiz do repo, NÃO versionado)
+
+name: iris
+
+services:
+
+  # --- PostgreSQL do negócio (dados da ÍRIS) ---
+  postgres_app:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${APP_DB_OWNER}          # iris_owner (dono; roda migrações)
+      POSTGRES_PASSWORD: ${APP_DB_OWNER_PWD}
+      POSTGRES_DB: ${APP_DB_NAME}             # iris
+    volumes:
+      - app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DB_OWNER} -d ${APP_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]                       # sem ports: — nada publicado
+
+  # --- PostgreSQL do n8n (estado do n8n, ISOLADO do negócio) ---
+  postgres_n8n:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${N8N_DB_USER}
+      POSTGRES_PASSWORD: ${N8N_DB_PWD}
+      POSTGRES_DB: ${N8N_DB_NAME}             # n8n
+    volumes:
+      - n8n_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${N8N_DB_USER} -d ${N8N_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  # --- PostgreSQL do Metabase (metadados do Metabase, separado) ---
+  postgres_metabase:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${MB_DB_USER}
+      POSTGRES_PASSWORD: ${MB_DB_PWD}
+      POSTGRES_DB: ${MB_DB_NAME}              # metabase
+    volumes:
+      - metabase_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MB_DB_USER} -d ${MB_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  # --- n8n (orquestração) ---
+  n8n:
+    image: n8nio/n8n:latest                    # [A CONFIRMAR] fixar versão exata antes de produção
+    restart: always
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres_n8n
+      DB_POSTGRESDB_DATABASE: ${N8N_DB_NAME}
+      DB_POSTGRESDB_USER: ${N8N_DB_USER}
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PWD}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_HOST: ${N8N_HOST}
+      N8N_PROTOCOL: https
+      N8N_PORT: 5678
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      N8N_DIAGNOSTICS_ENABLED: "false"
+    depends_on:
+      postgres_n8n:
+        condition: service_healthy
+    networks: [internal]                       # acesso só via Nginx
+
+  # --- Metabase (dashboards; conecta no iris por usuário somente leitura) ---
+  metabase:
+    image: metabase/metabase:latest            # [A CONFIRMAR] fixar versão exata antes de produção
+    restart: always
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${MB_DB_NAME}
+      MB_DB_USER: ${MB_DB_USER}
+      MB_DB_PASS: ${MB_DB_PWD}
+      MB_DB_HOST: postgres_metabase
+      MB_DB_PORT: 5432
+      JAVA_TIMEZONE: America/Sao_Paulo
+    depends_on:
+      postgres_metabase:
+        condition: service_healthy
+    networks: [internal]
+
+  # --- Nginx (única porta pública: 443; 80 só para redirect + ACME) ---
+  nginx:
+    image: nginx:stable
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - ./certs:/etc/letsencrypt:ro            # certificados do Certbot (host) montados read-only
+      - certbot_www:/var/www/certbot:ro
+    depends_on: [n8n, metabase]
+    networks: [internal]
+
+volumes:
+  app_data:
+  n8n_db_data:
+  metabase_db_data:
+  certbot_www:
+
+networks:
+  internal:
+    driver: bridge
